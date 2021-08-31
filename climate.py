@@ -24,7 +24,8 @@ Measurement = Base.classes.measurement
 Station = Base.classes.station
 
 # Specify today's date
-today = dt.datetime.strptime(str(dt.date.today()), '%Y-%m-%d')
+today = str(dt.date.today())
+print(today)
 
 # Flask
 # Set up app
@@ -45,6 +46,8 @@ def home():
 @app.route("/api/v1.0/precipitation")
 def prcp():
     # Get data
+    # Note, rubric specifies "for the last year in the database", but this is not asked for in the homework instructions
+    # Code to calculate the last year of data is in the tobs route, and could be applied here
     session = Session(engine)
     results = session.query(Measurement.date,Measurement.prcp).all()
     session.close()
@@ -126,6 +129,8 @@ def tobs():
 
 @app.route("/api/v1.0/<start>")
 @app.route("/api/v1.0/<start>/<end>")
+# Default end is specified as today for flexibility; could also use known end point of data for same effect
+# Alternative would have been to have two separate routes, but that would duplicate most of the code for no end-user benefit
 def temp(start, end=today):
     # Open session
     session = Session(engine)
@@ -139,11 +144,12 @@ def temp(start, end=today):
         .all()
        )
 
+    # Close session
     session.close()
 
     # Return data
-        temp_dict = {"Minimum" : results[0][0], "Average": results[0][1], "Maximum" : results[0][2]}
-        return(jsonify(temp_dict))
+    temp_dict = {"Start date": start, "End date": end, "Minimum" : results[0][0], "Average": results[0][1], "Maximum" : results[0][2]}
+    return(jsonify(temp_dict))
     
 if __name__ == '__main__':
     app.run(debug=True)
